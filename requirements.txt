@@ -9,5 +9,5 @@ seaborn
 numpy
 plotly
 requests
-beautifulsoup4
+streamlit-autorefresh
 
