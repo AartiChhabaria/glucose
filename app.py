@@ -119,77 +119,52 @@
     
 #     time.sleep(REFRESH_SEC)
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import numpy as np
 import altair as alt
 
-# Simulated prediction model (replace with ML model later)
-def predict_future_glucose(current_glucose, minutes):
-    trend_per_min = 0.05  
-    return current_glucose + trend_per_min * minutes
+# Auto-refresh every 10 seconds
+_ = st_autorefresh(interval=10 * 1000, key="data_refresh")
 
-# Google Sheets URL
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1hoNuXaW_y8QPL3Cb8rhUa3ajGnoeKVEfTRVK8OJ1stI/gviz/tq?tqx=out:csv&sheet=Sheet1"
+st.set_page_config(page_title="Glucose Dashboard", layout="wide")
 
-st.set_page_config(page_title="AI Glucose Monitor", layout="wide")
+st.title("Live AI Glucose Monitor Dashboard")
 
-st.title("🧪 Live AI Glucose Monitor Dashboard")
+# ... fetch your data from Google Sheets or wherever
+df = pd.DataFrame()  # Replace with actual data fetch
 
-st.markdown("""
-This dashboard fetches the latest data from your Google Sheet and:
-- Shows **real-time glucose predictions**
-- Forecasts the next 30–60 minutes
-- Sends 🚨 alerts for abnormal levels
-""")
+current_glucose = np.random.uniform(90, 110)
+glucose_30 = current_glucose + 0.05 * 30
+glucose_60 = current_glucose + 0.05 * 60
 
-# Auto-refresh every 10 sec
-st_autorefresh = st.experimental_autorefresh(interval=10 * 1000, key="refresh")
+# Alerts
+if glucose_30 > 180 or glucose_60 > 180:
+    st.error("🚨 Predicted glucose too high!")
+elif glucose_30 < 70 or glucose_60 < 70:
+    st.error("🚨 Predicted glucose too low!")
+else:
+    st.success("Glucose levels are within the safe range.")
 
-try:
-    df = pd.read_csv(SHEET_URL)
+# Metrics
+col1, col2, col3 = st.columns(3)
+col1.metric("Current Glucose", f"{current_glucose:.2f} mg/dL")
+col2.metric("In 30 min", f"{glucose_30:.2f} mg/dL", delta=f"{glucose_30 - current_glucose:.2f}")
+col3.metric("In 60 min", f"{glucose_60:.2f} mg/dL", delta=f"{glucose_60 - current_glucose:.2f}")
 
-    # Latest glucose (placeholder ML model)
-    current_glucose = np.random.uniform(90, 110)
-    glucose_30 = predict_future_glucose(current_glucose, 30)
-    glucose_60 = predict_future_glucose(current_glucose, 60)
+# Trend chart
+chart_df = pd.DataFrame({
+    "Time": ["Now", "30 min", "60 min"],
+    "Glucose": [current_glucose, glucose_30, glucose_60]
+})
+chart = alt.Chart(chart_df).mark_line(point=True).encode(
+    x="Time",
+    y="Glucose",
+    tooltip=["Time", "Glucose"]
+).properties(height=400)
 
-    # 🚨 Alerts
-    alert_placeholder = st.empty()
-    if glucose_30 > 180 or glucose_60 > 180:
-        alert_placeholder.error("🚨 Alert: Glucose predicted to go TOO HIGH (>180 mg/dL)!")
-    elif glucose_30 < 70 or glucose_60 < 70:
-        alert_placeholder.error("🚨 Alert: Glucose predicted to go TOO LOW (<70 mg/dL)!")
-    else:
-        alert_placeholder.success("🟢 Glucose predictions are within the safe range.")
+st.altair_chart(chart, use_container_width=True)
 
-    # --- Dashboard Layout ---
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Current Glucose", f"{current_glucose:.2f} mg/dL")
-    col2.metric("Predicted (30 min)", f"{glucose_30:.2f} mg/dL",
-                delta=f"{glucose_30 - current_glucose:.2f}")
-    col3.metric("Predicted (60 min)", f"{glucose_60:.2f} mg/dL",
-                delta=f"{glucose_60 - current_glucose:.2f}")
-
-    # Show recent sheet data
-    st.subheader("📊 Latest Data from Google Sheets")
-    st.dataframe(df.tail(5))
-
-    # --- Glucose Trend Chart ---
-    st.subheader("📈 Glucose Trend & Forecast")
-
-    chart_df = pd.DataFrame({
-        "Time": ["Now", "30 min", "60 min"],
-        "Glucose": [current_glucose, glucose_30, glucose_60]
-    })
-
-    chart = alt.Chart(chart_df).mark_line(point=True).encode(
-        x="Time",
-        y="Glucose",
-        tooltip=["Time", "Glucose"]
-    ).properties(width=700, height=400)
-
-    st.altair_chart(chart, use_container_width=True)
-
-except Exception as e:
-    st.error(f"❌ Error loading sheet: {e}")
+# Show latest table
+st.subheader("Recent Data")
+st.dataframe(df.tail(5))
