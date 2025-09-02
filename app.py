@@ -54,67 +54,142 @@
 
 # 
 
+# import streamlit as st
+# import pandas as pd
+# import numpy as np
+# import time
+
+# # Simulated prediction model (replace with ML model later)
+# def predict_future_glucose(current_glucose, minutes):
+#     # Simple linear trend (placeholder)
+#     # Example: glucose changes by ±0.5 per 10 min
+#     trend_per_min = 0.05  
+#     return current_glucose + trend_per_min * minutes
+
+# # Google Sheets URL (replace with your sheet’s published CSV link)
+# SHEET_URL = "https://docs.google.com/spreadsheets/d/1hoNuXaW_y8QPL3Cb8rhUa3ajGnoeKVEfTRVK8OJ1stI/gviz/tq?tqx=out:csv&sheet=Sheet1"
+
+# st.set_page_config(page_title="AI Glucose Monitor", layout="wide")
+
+# st.title("🧪 Live AI Glucose Monitor (Google Sheets Input + Future Prediction)")
+
+# st.markdown("""
+# This app fetches the latest data from your Google Sheet and:
+# - Shows real-time glucose predictions  
+# - Forecasts the next 30–60 minutes  
+# - Alerts 🚨 if levels are predicted to be too high (>180 mg/dL) or too low (<70 mg/dL)  
+# """)
+
+# # Auto-refresh every 10 sec
+# REFRESH_SEC = 10
+# placeholder = st.empty()
+
+# while True:
+#     try:
+#         # Load sheet data
+#         df = pd.read_csv(SHEET_URL)
+        
+#         with placeholder.container():
+#             st.subheader("📊 Latest data from Google Sheets:")
+#             st.dataframe(df.tail(3))  # Show last 3 rows
+            
+#             # Get latest glucose value
+#             current_glucose = np.random.uniform(90, 110)  # <--- replace with ML model result
+#             st.success(f"✅ Current Predicted Glucose: **{current_glucose:.2f} mg/dL**")
+            
+#             # Predictions for 30 and 60 min
+#             glucose_30 = predict_future_glucose(current_glucose, 30)
+#             glucose_60 = predict_future_glucose(current_glucose, 60)
+            
+#             st.info(f"🔮 Expected Glucose after 30 min: **{glucose_30:.2f} mg/dL**")
+#             st.info(f"🔮 Expected Glucose after 60 min: **{glucose_60:.2f} mg/dL**")
+            
+#             # Alerts
+#             if glucose_30 > 180 or glucose_60 > 180:
+#                 st.error("🚨 Alert: Glucose predicted to go TOO HIGH (>180 mg/dL)!")
+#             elif glucose_30 < 70 or glucose_60 < 70:
+#                 st.error("🚨 Alert: Glucose predicted to go TOO LOW (<70 mg/dL)!")
+#             else:
+#                 st.success("🟢 Glucose predictions are within the safe range.")
+            
+#             st.markdown(f"⏳ Auto-refreshing every {REFRESH_SEC} seconds (from sheet).")
+        
+#     except Exception as e:
+#         st.error(f"❌ Error loading sheet: {e}")
+    
+#     time.sleep(REFRESH_SEC)
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
+import altair as alt
 
 # Simulated prediction model (replace with ML model later)
 def predict_future_glucose(current_glucose, minutes):
-    # Simple linear trend (placeholder)
-    # Example: glucose changes by ±0.5 per 10 min
     trend_per_min = 0.05  
     return current_glucose + trend_per_min * minutes
 
-# Google Sheets URL (replace with your sheet’s published CSV link)
+# Google Sheets URL
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1hoNuXaW_y8QPL3Cb8rhUa3ajGnoeKVEfTRVK8OJ1stI/gviz/tq?tqx=out:csv&sheet=Sheet1"
 
 st.set_page_config(page_title="AI Glucose Monitor", layout="wide")
 
-st.title("🧪 Live AI Glucose Monitor (Google Sheets Input + Future Prediction)")
+st.title("🧪 Live AI Glucose Monitor Dashboard")
 
 st.markdown("""
-This app fetches the latest data from your Google Sheet and:
-- Shows real-time glucose predictions  
-- Forecasts the next 30–60 minutes  
-- Alerts 🚨 if levels are predicted to be too high (>180 mg/dL) or too low (<70 mg/dL)  
+This dashboard fetches the latest data from your Google Sheet and:
+- Shows **real-time glucose predictions**
+- Forecasts the next 30–60 minutes
+- Sends 🚨 alerts for abnormal levels
 """)
 
 # Auto-refresh every 10 sec
-REFRESH_SEC = 10
-placeholder = st.empty()
+st_autorefresh = st.experimental_autorefresh(interval=10 * 1000, key="refresh")
 
-while True:
-    try:
-        # Load sheet data
-        df = pd.read_csv(SHEET_URL)
-        
-        with placeholder.container():
-            st.subheader("📊 Latest data from Google Sheets:")
-            st.dataframe(df.tail(3))  # Show last 3 rows
-            
-            # Get latest glucose value
-            current_glucose = np.random.uniform(90, 110)  # <--- replace with ML model result
-            st.success(f"✅ Current Predicted Glucose: **{current_glucose:.2f} mg/dL**")
-            
-            # Predictions for 30 and 60 min
-            glucose_30 = predict_future_glucose(current_glucose, 30)
-            glucose_60 = predict_future_glucose(current_glucose, 60)
-            
-            st.info(f"🔮 Expected Glucose after 30 min: **{glucose_30:.2f} mg/dL**")
-            st.info(f"🔮 Expected Glucose after 60 min: **{glucose_60:.2f} mg/dL**")
-            
-            # Alerts
-            if glucose_30 > 180 or glucose_60 > 180:
-                st.error("🚨 Alert: Glucose predicted to go TOO HIGH (>180 mg/dL)!")
-            elif glucose_30 < 70 or glucose_60 < 70:
-                st.error("🚨 Alert: Glucose predicted to go TOO LOW (<70 mg/dL)!")
-            else:
-                st.success("🟢 Glucose predictions are within the safe range.")
-            
-            st.markdown(f"⏳ Auto-refreshing every {REFRESH_SEC} seconds (from sheet).")
-        
-    except Exception as e:
-        st.error(f"❌ Error loading sheet: {e}")
-    
-    time.sleep(REFRESH_SEC)
+try:
+    df = pd.read_csv(SHEET_URL)
+
+    # Latest glucose (placeholder ML model)
+    current_glucose = np.random.uniform(90, 110)
+    glucose_30 = predict_future_glucose(current_glucose, 30)
+    glucose_60 = predict_future_glucose(current_glucose, 60)
+
+    # 🚨 Alerts
+    alert_placeholder = st.empty()
+    if glucose_30 > 180 or glucose_60 > 180:
+        alert_placeholder.error("🚨 Alert: Glucose predicted to go TOO HIGH (>180 mg/dL)!")
+    elif glucose_30 < 70 or glucose_60 < 70:
+        alert_placeholder.error("🚨 Alert: Glucose predicted to go TOO LOW (<70 mg/dL)!")
+    else:
+        alert_placeholder.success("🟢 Glucose predictions are within the safe range.")
+
+    # --- Dashboard Layout ---
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Current Glucose", f"{current_glucose:.2f} mg/dL")
+    col2.metric("Predicted (30 min)", f"{glucose_30:.2f} mg/dL",
+                delta=f"{glucose_30 - current_glucose:.2f}")
+    col3.metric("Predicted (60 min)", f"{glucose_60:.2f} mg/dL",
+                delta=f"{glucose_60 - current_glucose:.2f}")
+
+    # Show recent sheet data
+    st.subheader("📊 Latest Data from Google Sheets")
+    st.dataframe(df.tail(5))
+
+    # --- Glucose Trend Chart ---
+    st.subheader("📈 Glucose Trend & Forecast")
+
+    chart_df = pd.DataFrame({
+        "Time": ["Now", "30 min", "60 min"],
+        "Glucose": [current_glucose, glucose_30, glucose_60]
+    })
+
+    chart = alt.Chart(chart_df).mark_line(point=True).encode(
+        x="Time",
+        y="Glucose",
+        tooltip=["Time", "Glucose"]
+    ).properties(width=700, height=400)
+
+    st.altair_chart(chart, use_container_width=True)
+
+except Exception as e:
+    st.error(f"❌ Error loading sheet: {e}")
