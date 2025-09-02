@@ -3,3 +3,11 @@ pandas
 scikit-learn
 xgboost
 joblib
+statsmodels
+matplotlib
+seaborn
+numpy
+plotly
+requests
+beautifulsoup4
+
