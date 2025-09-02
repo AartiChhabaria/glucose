@@ -118,53 +118,105 @@
 #         st.error(f"❌ Error loading sheet: {e}")
     
 #     time.sleep(REFRESH_SEC)
+# import streamlit as st
+# from streamlit_autorefresh import st_autorefresh
+# import pandas as pd
+# import numpy as np
+# import altair as alt
+
+# # Auto-refresh every 10 seconds
+# _ = st_autorefresh(interval=10 * 1000, key="data_refresh")
+
+# st.set_page_config(page_title="Glucose Dashboard", layout="wide")
+
+# st.title("Live AI Glucose Monitor Dashboard")
+
+# # ... fetch your data from Google Sheets or wherever
+# df = pd.DataFrame()  # Replace with actual data fetch
+
+# current_glucose = np.random.uniform(90, 110)
+# glucose_30 = current_glucose + 0.05 * 30
+# glucose_60 = current_glucose + 0.05 * 60
+
+# # Alerts
+# if glucose_30 > 180 or glucose_60 > 180:
+#     st.error("🚨 Predicted glucose too high!")
+# elif glucose_30 < 70 or glucose_60 < 70:
+#     st.error("🚨 Predicted glucose too low!")
+# else:
+#     st.success("Glucose levels are within the safe range.")
+
+# # Metrics
+# col1, col2, col3 = st.columns(3)
+# col1.metric("Current Glucose", f"{current_glucose:.2f} mg/dL")
+# col2.metric("In 30 min", f"{glucose_30:.2f} mg/dL", delta=f"{glucose_30 - current_glucose:.2f}")
+# col3.metric("In 60 min", f"{glucose_60:.2f} mg/dL", delta=f"{glucose_60 - current_glucose:.2f}")
+
+# # Trend chart
+# chart_df = pd.DataFrame({
+#     "Time": ["Now", "30 min", "60 min"],
+#     "Glucose": [current_glucose, glucose_30, glucose_60]
+# })
+# chart = alt.Chart(chart_df).mark_line(point=True).encode(
+#     x="Time",
+#     y="Glucose",
+#     tooltip=["Time", "Glucose"]
+# ).properties(height=400)
+
+# st.altair_chart(chart, use_container_width=True)
+
+# # Show latest table
+# st.subheader("Recent Data")
+# st.dataframe(df.tail(5))
+
+
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import numpy as np
 import altair as alt
 
-# Auto-refresh every 10 seconds
+# Google Sheets link
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1hoNuXaW_y8QPL3Cb8rhUa3ajGnoeKVEfTRVK8OJ1stI/gviz/tq?tqx=out:csv&sheet=Sheet1"
+
+# Auto-refresh every 10s
 _ = st_autorefresh(interval=10 * 1000, key="data_refresh")
 
-st.set_page_config(page_title="Glucose Dashboard", layout="wide")
+st.title("🧪 Live AI Glucose Monitor Dashboard")
 
-st.title("Live AI Glucose Monitor Dashboard")
+try:
+    df = pd.read_csv(SHEET_URL)   # <-- fetch actual data
+    st.subheader("📊 Recent Data")
+    st.dataframe(df.tail(5))      # <-- now this won’t be empty
 
-# ... fetch your data from Google Sheets or wherever
-df = pd.DataFrame()  # Replace with actual data fetch
+    # --- Predictions ---
+    current_glucose = np.random.uniform(90, 110)  # replace with ML model
+    glucose_30 = current_glucose + 0.05 * 30
+    glucose_60 = current_glucose + 0.05 * 60
 
-current_glucose = np.random.uniform(90, 110)
-glucose_30 = current_glucose + 0.05 * 30
-glucose_60 = current_glucose + 0.05 * 60
+    # Alerts
+    if glucose_30 > 180 or glucose_60 > 180:
+        st.error("🚨 Predicted glucose too high!")
+    elif glucose_30 < 70 or glucose_60 < 70:
+        st.error("🚨 Predicted glucose too low!")
+    else:
+        st.success("🟢 Glucose levels are within the safe range.")
 
-# Alerts
-if glucose_30 > 180 or glucose_60 > 180:
-    st.error("🚨 Predicted glucose too high!")
-elif glucose_30 < 70 or glucose_60 < 70:
-    st.error("🚨 Predicted glucose too low!")
-else:
-    st.success("Glucose levels are within the safe range.")
+    # Metrics
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Current Glucose", f"{current_glucose:.2f} mg/dL")
+    col2.metric("In 30 min", f"{glucose_30:.2f} mg/dL", delta=f"{glucose_30 - current_glucose:.2f}")
+    col3.metric("In 60 min", f"{glucose_60:.2f} mg/dL", delta=f"{glucose_60 - current_glucose:.2f}")
 
-# Metrics
-col1, col2, col3 = st.columns(3)
-col1.metric("Current Glucose", f"{current_glucose:.2f} mg/dL")
-col2.metric("In 30 min", f"{glucose_30:.2f} mg/dL", delta=f"{glucose_30 - current_glucose:.2f}")
-col3.metric("In 60 min", f"{glucose_60:.2f} mg/dL", delta=f"{glucose_60 - current_glucose:.2f}")
+    # Chart
+    chart_df = pd.DataFrame({
+        "Time": ["Now", "30 min", "60 min"],
+        "Glucose": [current_glucose, glucose_30, glucose_60]
+    })
+    chart = alt.Chart(chart_df).mark_line(point=True).encode(
+        x="Time", y="Glucose", tooltip=["Time", "Glucose"]
+    )
+    st.altair_chart(chart, use_container_width=True)
 
-# Trend chart
-chart_df = pd.DataFrame({
-    "Time": ["Now", "30 min", "60 min"],
-    "Glucose": [current_glucose, glucose_30, glucose_60]
-})
-chart = alt.Chart(chart_df).mark_line(point=True).encode(
-    x="Time",
-    y="Glucose",
-    tooltip=["Time", "Glucose"]
-).properties(height=400)
-
-st.altair_chart(chart, use_container_width=True)
-
-# Show latest table
-st.subheader("Recent Data")
-st.dataframe(df.tail(5))
+except Exception as e:
+    st.error(f"❌ Error loading data: {e}")
